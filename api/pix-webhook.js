@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG Optimizer | Game Optimization Packs</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@300;400;600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --brand: #00e5ff;
+            --brand-glow: rgba(0, 229, 255, 0.4);
+            --bg: #09090b;
+            --surface: #121214;
+            --text-main: #f8f8f2;
+            --text-alt: #a1a1aa;
+            --border: rgba(0, 229, 255, 0.15);
+            --error: #ff4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); overflow-x: hidden; }
+
+        .top-announcement {
+            width: 100%; background: var(--brand); color: #000; padding: 8px 0;
+            position: fixed; top: 0; left: 0; z-index: 2000; overflow: hidden;
+            font-weight: 800; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase;
+            box-shadow: 0 0 10px var(--brand-glow);
+        }
+        .marquee { white-space: nowrap; display: inline-block; animation: marquee-anim 25s linear infinite; }
+        .marquee span { margin-right: 50px; }
+        @keyframes marquee-anim { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+        nav {
+            position: fixed; top: 31px; width: 100%; z-index: 1000;
+            padding: 15px 6%; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+        }
+        .logo { font-family: 'Syncopate', sans-serif; font-weight: 700; font-size: 1.4rem; color: var(--brand); text-decoration: none; text-shadow: 0 0 8px var(--brand-glow); }
+        
+        .nav-actions { display: flex; gap: 20px; align-items: center; }
+        .discord-nav-btn {
+            display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--brand);
+            font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.9rem;
+            border: 1px solid var(--border); padding: 6px 15px; border-radius: 4px; transition: 0.3s;
+        }
+        .discord-nav-btn:hover { background: rgba(0, 229, 255, 0.1); border-color: var(--brand); box-shadow: 0 0 10px rgba(0,229,255,0.2) inset; }
+        
+        .cart-trigger { position: relative; cursor: pointer; transition: 0.3s; display: flex; align-items: center; }
+        .badge {
+            position: absolute; top: -8px; right: -10px;
+            background: var(--brand); color: black; font-size: 10px; font-weight: 900;
+            padding: 2px 6px; border-radius: 50%; box-shadow: 0 0 5px var(--brand);
+        }
+
+        .hero {
+            height: 60vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; background: radial-gradient(circle at center, rgba(0, 229, 255, 0.05) 0%, var(--bg) 100%);
+            margin-top: 90px;
+            background-image: linear-gradient(rgba(9, 9, 11, 0.9), rgba(9, 9, 11, 0.9)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        .hero h1 { font-family: 'Syncopate', sans-serif; font-size: clamp(2rem, 5vw, 4rem); text-transform: uppercase; text-shadow: 0 0 20px rgba(0, 229, 255, 0.3); }
+        .hero span { color: var(--brand); }
+
+        .filter-container {
+            position: sticky; top: 85px; z-index: 900;
+            background: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); padding: 20px 0;
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+        }
+        .filter-btn {
+            background: transparent; border: 1px solid var(--border); color: var(--text-alt);
+            padding: 10px 25px; border-radius: 4px; cursor: pointer;
+            font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s ease;
+        }
+        .filter-btn:hover { border-color: var(--brand); color: var(--brand); box-shadow: 0 0 10px rgba(0, 229, 255, 0.2) inset; }
+        .filter-btn.active { background: rgba(0, 229, 255, 0.1); border-color: var(--brand); color: var(--brand); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3) inset; }
+
+        .shop-container { padding: 50px 6%; min-height: 80vh; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+
+        .p-card { background: var(--surface); border-radius: 8px; padding: 20px; border: 1px solid var(--border); transition: 0.4s; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        .p-card::before { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: var(--brand); opacity: 0; transition: 0.4s; }
+        .p-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 255, 0.1); }
+        .p-card:hover::before { opacity: 1; }
+        
+        .p-img { width: 100%; height: 200px; object-fit: cover; margin-bottom: 20px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
+        
+        .p-cat { font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--brand); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+        .p-name { font-size: 1.1rem; font-weight: 600; margin: 8px 0; flex-grow: 1; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+        .p-price { font-family: 'Syncopate', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 15px; }
+        
+        .buttons-wrapper { display: flex; gap: 10px; width: 100%; }
+        .info-btn { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border); color: var(--brand); border-radius: 4px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; }
+        .info-btn:hover { background: rgba(0, 229, 255, 0.1); }
+        .buy-btn { flex: 2; padding: 12px; background: var(--brand); border: 1px solid var(--brand); color: #000; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; border-radius: 4px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .buy-btn:hover { background: transparent; color: var(--brand); box-shadow: 0 0 15px var(--brand-glow) inset; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
+            z-index: 3000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content {
+            background: var(--surface); padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; border: 1px solid var(--brand);
+            position: relative; transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.15);
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-alt); transition: 0.3s; }
+        .modal-close:hover { color: var(--brand); transform: scale(1.1); }
+        
+        .m-img { width: 100%; height: 200px; object-fit: cover; margin-bottom: 20px; border-radius: 4px; border: 1px solid var(--border); }
+        .m-title { font-family: 'Syncopate', sans-serif; font-size: 1.2rem; color: var(--brand); margin-bottom: 10px; text-transform: uppercase; }
+        .m-desc { color: var(--text-alt); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; }
+        .m-specs { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+        .m-specs li { background: rgba(0, 229, 255, 0.05); padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; color: var(--text-main); border: 1px solid var(--border); font-family: 'Rajdhani', sans-serif; font-weight: 600; text-transform: uppercase; }
+
+        .cart-sidebar {
+            position: fixed; right: -100%; top: 0; width: 450px; height: 100%; max-width: 100%;
+            background: #09090b; z-index: 2000; padding: 40px; box-shadow: -20px 0 50px rgba(0,0,0,0.9); transition: 0.5s cubic-bezier(0.85, 0, 0.15, 1);
+            overflow-y: auto; border-left: 1px solid var(--border);
+        }
+        .cart-sidebar.open { right: 0; }
+        .cart-sidebar::-webkit-scrollbar { width: 6px; }
+        .cart-sidebar::-webkit-scrollbar-track { background: var(--bg); }
+        .cart-sidebar::-webkit-scrollbar-thumb { background: var(--brand); border-radius: 0px; }
+        .cart-content { padding-right: 10px; margin-bottom: 15px; }
+
+        .cart-item { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed var(--border); }
+        .cart-item img { width: 60px; height: 60px; border-radius: 4px; background: var(--surface); object-fit: cover; border: 1px solid rgba(0,229,255,0.2); }
+        
+        .pix-input { width: 100%; padding: 12px; background: #121214; border: 1px solid var(--border); color: #fff; border-radius: 4px; margin-bottom: 10px; font-size: 0.9rem; text-align: left; transition: 0.3s; font-family: 'Rajdhani', sans-serif; }
+        .pix-input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 8px rgba(0,229,255,0.2); }
+        .pix-input[readonly] { background: #0a0a0c; color: var(--text-alt); cursor: not-allowed; border-color: #222; }
+        
+        .pix-area { display: none; margin-top: 15px; text-align: center; animation: fadeIn 0.5s ease; }
+        .pix-input.copia-cola { color: var(--brand); text-align: center; font-size: 0.8rem; border-style: dashed; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .error-msg {
+            display: none; align-items: center; gap: 10px;
+            background: rgba(255, 68, 68, 0.1); border: 1px solid var(--error); color: #ff6b6b;
+            padding: 12px 15px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
+            margin-bottom: 15px; animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        footer { background: var(--surface); border-top: 1px solid var(--border); padding: 60px 6% 30px; margin-top: 50px; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .f-col h4 { font-size: 1rem; margin-bottom: 20px; color: var(--brand); font-weight: 700; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; }
+        .f-col p { color: var(--text-alt); font-size: 0.85rem; line-height: 1.6; }
+        .f-bottom { border-top: 1px solid #222; padding-top: 30px; text-align: center; font-size: 0.8rem; color: var(--text-alt); }
+
+        @media (max-width: 768px) {
+            .top-announcement { font-size: 0.65rem; padding: 6px 0; }
+            nav { top: 27px; padding: 12px 5%; }
+            .nav-actions { gap: 15px; }
+            .discord-nav-btn { display: none; /* Esconde o texto no mobile para não quebrar o menu, deixa só os ícones */ }
+            .filter-container { top: 76px; padding: 15px 5%; justify-content: center; }
+            .hero { margin-top: 80px; height: 45vh; }
+            .shop-container { padding: 40px 5%; }
+            .cart-sidebar { width: 100%; padding: 25px 15px; }
+            .modal-content { padding: 20px; margin: 15px; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-announcement">
+        <div class="marquee">
+            <span>🚀 ENTREGA DIGITAL IMEDIATA VIA EMAIL E DISCORD</span>
+            <span>🔒 SCRIPTS 100% SEGUROS E LIVRES DE BANS</span>
+            <span>💳 PAGAMENTO VIA PIX COM LIBERAÇÃO AUTOMÁTICA</span>
+            <span>⚡ MAXIMIZE SEU FPS E REDUZA O INPUT LAG</span>
+        </div>
+    </div>
+
+    <nav>
+        <a href="#" class="logo">GG OPTIMIZER</a>
+        <div class="nav-actions">
+            <a href="LINK_DO_SEU_DISCORD" target="_blank" class="discord-nav-btn">
+                <i data-lucide="message-square" size="18"></i> DISCORD
+            </a>
+            <i data-lucide="user" size="20" color="var(--brand)" style="cursor: pointer;"></i>
+            <div class="cart-trigger" onclick="toggleCart()">
+                <i data-lucide="shopping-cart" size="22" color="var(--brand)"></i>
+                <span class="badge" id="cart-count">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div>
+            <p style="color: var(--brand); font-family: 'Rajdhani'; font-weight: 700; font-size: 1.2rem; letter-spacing: 5px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">PERFORMANCE ABSOLUTA</p>
+            <h1>Desbloqueie seu <span>Máximo FPS</span></h1>
+        </div>
+    </header>
+
+    <div class="filter-container">
+        <button class="filter-btn active" onclick="filterProducts('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="filterProducts('windows', this)">Otimização OS</button>
+        <button class="filter-btn" onclick="filterProducts('jogos', this)">Jogos Específicos</button>
+        <button class="filter-btn" onclick="filterProducts('scripts', this)">Scripts Avançados</button>
+        <button class="filter-btn" onclick="filterProducts('vip', this)">Suporte VIP</button>
+    </div>
+
+    <main class="shop-container">
+        <div class="product-grid" id="product-grid"></div>
+    </main>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="f-col">
+                <h3 style="font-family:'Syncopate'; color:var(--brand); margin-bottom: 15px; font-size:1.1rem; text-shadow: 0 0 5px var(--brand-glow);">GG OPTIMIZER</h3>
+                <p>Especialistas em performance extrema. Nossos scripts e otimizações são desenvolvidos para extrair 100% do seu hardware sem comprometer a estabilidade ou segurança do sistema.</p>
+            </div>
+            
+            <div class="f-col">
+                <h4>COMPATIBILIDADE</h4>
+                <p style="margin-bottom: 10px;"><i data-lucide="check-circle" size="14" style="display:inline; color:var(--brand); margin-right:5px;"></i> Vanguard (Valorant)</p>
+                <p style="margin-bottom: 10px;"><i data-lucide="check-circle" size="14" style="display:inline; color:var(--brand); margin-right:5px;"></i> Ricochet (Warzone)</p>
+                <p style="margin-bottom: 10px;"><i data-lucide="check-circle" size="14" style="display:inline; color:var(--brand); margin-right:5px;"></i> Easy Anti-Cheat</p>
+                <p><i data-lucide="check-circle" size="14" style="display:inline; color:var(--brand); margin-right:5px;"></i> BattlEye</p>
+            </div>
+
+            <div class="f-col">
+                <h4>SUPORTE & COMUNIDADE</h4>
+                <p style="margin-bottom: 20px;">Dúvidas? Precisa de ajuda com a instalação dos packs? Entre no nosso servidor do Discord, abra um ticket e conecte-se com a comunidade.</p>
+                <a href="LINK_DO_SEU_DISCORD" target="_blank" class="buy-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-size: 0.9rem; padding: 10px 20px;">
+                    <i data-lucide="message-square" size="18"></i> ENTRAR NO SERVIDOR
+                </a>
+            </div>
+
+            <div class="f-col">
+                <h4>SISTEMA SEGURO</h4>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                    <i data-lucide="terminal-square" color="var(--brand)" size="36"></i>
+                    <p style="font-size: 0.8rem; margin: 0; text-align: left;">Código Aberto & Auditável<br><span style="color: #fff; font-weight: 600;">Sem malwares ou keyloggers</span></p>
+                </div>
+                <p style="font-size: 0.85rem;">Receba seus packs de otimização instantaneamente logo após a confirmação do pagamento via PIX.</p>
+            </div>
+        </div>
+        
+        <div class="f-bottom">
+            <p style="margin-bottom: 10px; font-weight: bold; color: var(--text-alt);">LEMBRETE: Crie sempre um Ponto de Restauração antes de aplicar otimizações profundas no sistema operacional.</p>
+            <p>© 2026 GG Optimizer. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <div class="modal-overlay" id="product-modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <i data-lucide="x" class="modal-close" onclick="closeModal()"></i>
+            <img src="" id="m-img" class="m-img" alt="Produto">
+            <h2 id="m-title" class="m-title">Nome do Produto</h2>
+            <p id="m-desc" class="m-desc">Descrição vai aqui.</p>
+            <ul id="m-specs" class="m-specs"></ul>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <h3 id="m-price" style="font-family: 'Syncopate'; font-size: 1.5rem; font-weight: 800; color: #fff;">R$ 0,00</h3>
+                <button id="m-add-btn" class="buy-btn" style="flex: none; padding: 12px 25px;">ADICIONAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-family: 'Syncopate'; font-size: 1.2rem; color: var(--brand);">CARRINHO</h2>
+            <i data-lucide="x" onclick="toggleCart()" style="cursor: pointer; color: var(--text-alt);"></i>
+        </div>
+        
+        <div id="cart-content" class="cart-content"></div>
+        
+        <div style="margin-top: 10px; border-top: 1px solid rgba(0,229,255,0.2); padding-top: 20px;">
+            <div id="checkout-form" style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px;">
+                <p style="font-size: 0.8rem; color: var(--brand); font-family: 'Rajdhani'; font-weight: 700; font-size: 1rem; margin-bottom: 5px;">DADOS DO JOGADOR</p>
+                <input type="text" id="cliente-nome" placeholder="Seu Nome Completo" class="pix-input" oninput="hideError()">
+                <input type="email" id="cliente-email" placeholder="E-mail de Recebimento" class="pix-input" oninput="hideError()">
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <span style="font-weight: bold; font-family: 'Rajdhani'; font-size: 1.2rem; color: var(--brand);">TOTAL:</span>
+                <span id="cart-total" style="color: #fff; font-family: 'Syncopate'; font-weight: 800; font-size: 1.3rem; text-shadow: 0 0 10px rgba(255,255,255,0.2);">R$ 0,00</span>
+            </div>
+            
+            <div id="cart-error" class="error-msg">
+                <i data-lucide="alert-triangle" size="18"></i>
+                <span id="cart-error-text">Mensagem de erro aqui.</span>
+            </div>
+
+            <button id="btn-finalizar" class="buy-btn" onclick="gerarPix()" style="width: 100%;">INICIAR CHECKOUT PIX</button>
+            
+            <div id="pix-area" class="pix-area">
+                <p style="font-size: 0.9rem; color: var(--text-main); font-family: 'Rajdhani'; font-weight: 600; margin-bottom: 10px;">Aguardando Pagamento...</p>
+                <div style="background: #fff; padding: 10px; display: inline-block; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 0 20px rgba(0,229,255,0.3);">
+                    <img id="pix-qr" src="" alt="QR Code PIX" style="width: 200px; height: 200px; display: block;">
+                </div>
+                <input type="text" id="pix-copia-cola" class="pix-input copia-cola" readonly>
+                <button class="buy-btn" onclick="copiarPix()" style="width: 100%; background: transparent; border: 1px solid var(--brand); color: var(--brand); margin-top: 5px; margin-bottom: 10px;">COPIAR PIX COPIA & COLA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const catalog = [
+        { id: 1, cat: 'windows', name: 'Win 10/11 Deep Debloat', price: 49.90, img: 'https://images.unsplash.com/photo-1629654297299-c8506221ca97?q=80&w=1000&auto=format&fit=crop', info: 'Limpeza profunda de telemetria e processos desnecessários da Microsoft. Reduza o uso de RAM do sistema base.', specs: ['Redução de RAM', 'Sem Telemetria', 'Boot + Rápido'] },
+        { id: 2, cat: 'jogos', name: 'Valorant Pro FPS Pack', price: 35.00, img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop', info: 'Configurações de registro e painel NVIDIA específicas para o motor Unreal Engine do Valorant.', specs: ['+30% FPS Médio', 'Menos Stuttering', 'Painel NVIDIA'] },
+        { id: 3, cat: 'jogos', name: 'Warzone 3.0 Ultimate', price: 45.00, img: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1000&auto=format&fit=crop', info: 'Configs no arquivo de opções do jogo (Worker Threads), otimização de cache de textura e prioridade de CPU dedicadas ao WZ.', specs: ['Correção de Drops', 'Visibilidade+', 'Latência Reduzida'] },
+        { id: 4, cat: 'jogos', name: 'CS2 Input Lag Optimizer', price: 30.00, img: 'https://images.unsplash.com/photo-1614624532983-4ce03382d63d?q=80&w=1000&auto=format&fit=crop', info: 'Refine o tempo de resposta do mouse (DPC Latency) e ajustes de inicialização focados na nova engine Source 2.', specs: ['DPC Tweaks', '1ms Response', 'Hitreg Fix'] },
+        { id: 5, cat: 'scripts', name: 'PowerShell Master Script', price: 99.90, img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1000&auto=format&fit=crop', info: 'Script avançado de PowerShell para aplicar centenas de otimizações no Windows com um único clique.', specs: ['Execução Segura', 'Reversível', 'Regedit & Serviços'] },
+        { id: 6, cat: 'scripts', name: 'Network Ping Reducer', price: 39.90, img: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1000&auto=format&fit=crop', info: 'Otimização avançada de rede (TCP/IP), configuração de DNS preferenciais de baixa rota e desativação de algoritmos de estrangulamento de banda.', specs: ['TCP/IP Tweak', 'Menos Packet Loss', 'Rotas Otimizadas'] },
+        { id: 7, cat: 'vip', name: 'BIOS & Overclock Guide', price: 59.90, img: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?q=80&w=1000&auto=format&fit=crop', info: 'Guia completo e configurações universais para XMP/EXPO, Curve Optimizer e Overclock leve e seguro de GPU via MSI Afterburner.', specs: ['RAM XMP', 'GPU Undervolt', 'Estabilidade 100%'] },
+        { id: 8, cat: 'vip', name: 'Suporte VIP 1-on-1 (Discord)', price: 150.00, img: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?q=80&w=1000&auto=format&fit=crop', info: 'Sessão remota via Discord onde nossa equipe aplica todas as otimizações manualmente de acordo com seu hardware específico.', specs: ['Suporte Remoto', 'Ajuste Fino', 'Garantia de Result.'] }
+    ];
+
+    let cart = [];
+    let subtotalCart = 0;
+    let checkPaymentInterval;
+
+    function renderProducts(filter = 'todos') {
+        const grid = document.getElementById('product-grid');
+        const filtered = filter === 'todos' ? catalog : catalog.filter(p => p.cat === filter);
+        grid.innerHTML = '';
+        filtered.forEach((p) => {
+            const card = document.createElement('div');
+            card.className = 'p-card';
+            card.innerHTML = `
+                <span class="p-cat">${p.cat.replace('-', ' ')}</span>
+                <img src="${p.img}" class="p-img" alt="${p.name}">
+                <h3 class="p-name">${p.name}</h3>
+                <p class="p-price">R$ ${p.price.toFixed(2)}</p>
+                <div class="buttons-wrapper">
+                    <button class="info-btn" onclick="openModal(${p.id})"><i data-lucide="info" size="20"></i></button>
+                    <button class="buy-btn" onclick="addToCart(${p.id}, event)">EQUIPAR</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        lucide.createIcons(); 
+        gsap.fromTo(".p-card", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, ease: "power2.out" });
+    }
+
+    function openModal(id) {
+        const product = catalog.find(p => p.id === id);
+        document.getElementById('m-img').src = product.img;
+        document.getElementById('m-title').innerText = product.name;
+        document.getElementById('m-desc').innerText = product.info;
+        document.getElementById('m-specs').innerHTML = product.specs.map(s => `<li>${s}</li>`).join('');
+        document.getElementById('m-price').innerText = `R$ ${product.price.toFixed(2)}`;
+        
+        const addBtn = document.getElementById('m-add-btn');
+        addBtn.onclick = (e) => { addToCart(product.id, e); closeModal(); };
+
+        const overlay = document.getElementById('product-modal');
+        overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('active'), 10);
+    }
+
+    function closeModal(event) {
+        if (event && event.target !== document.getElementById('product-modal')) return;
+        const overlay = document.getElementById('product-modal');
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.style.display = 'none', 300);
+    }
+
+    function filterProducts(category, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderProducts(category);
+    }
+
+    function toggleCart() {
+        document.getElementById('cart-sidebar').classList.toggle('open');
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('cart-error');
+        document.getElementById('cart-error-text').innerText = message;
+        errorDiv.style.display = 'flex';
+        errorDiv.style.animation = 'none';
+        errorDiv.offsetHeight; 
+        errorDiv.style.animation = 'shake 0.4s ease-in-out';
+        setTimeout(() => { errorDiv.style.display = 'none'; }, 4000);
+    }
+
+    function hideError() {
+        document.getElementById('cart-error').style.display = 'none';
+    }
+
+    function addToCart(id, event) {
+        const item = catalog.find(p => p.id === id);
+        cart.push(item);
+        updateCartUI();
+        hideError();
+        
+        document.getElementById('pix-area').style.display = 'none';
+        document.getElementById('checkout-form').style.display = 'flex';
+        document.getElementById('btn-finalizar').style.display = 'block';
+        
+        if (event && event.target) {
+            const btn = event.target.tagName === 'BUTTON' ? event.target : event.target.closest('button');
+            if(btn) {
+                const originalText = btn.innerText;
+                btn.innerText = "ADICIONADO!";
+                btn.style.background = "transparent";
+                btn.style.color = "var(--brand)";
+                btn.style.boxShadow = "0 0 15px rgba(0,229,255,0.4) inset";
+                setTimeout(() => { 
+                    btn.innerText = originalText; 
+                    btn.style.background = "var(--brand)"; 
+                    btn.style.color = "#000"; 
+                    btn.style.boxShadow = "none";
+                }, 1000);
+            }
+        }
+    }
+
+    function updateCartUI() {
+        const content = document.getElementById('cart-content');
+        if(cart.length === 0) {
+            content.innerHTML = `<p style="text-align:center; color:var(--text-alt); margin-top:50px; font-family:'Rajdhani'; font-size:1.1rem;">Nenhum pacote selecionado.</p>`;
+        } else {
+            content.innerHTML = cart.map((item, index) => `
+                <div class="cart-item">
+                    <img src="${item.img}" alt="pack">
+                    <div style="flex:1">
+                        <p style="font-size: 0.9rem; font-weight: 600; font-family: 'Rajdhani'; text-transform: uppercase;">${item.name}</p>
+                        <p style="color: var(--brand); font-weight: 800; font-family: 'Syncopate'; font-size: 0.8rem; margin-top: 5px;">R$ ${item.price.toFixed(2)}</p>
+                    </div>
+                    <button onclick="removeFromCart(${index})" style="background:none; border:none; color:var(--error); cursor:pointer; transition: 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        <i data-lucide="trash-2" size="20"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        calcularTotais();
+        document.getElementById('cart-count').innerText = cart.length;
+        lucide.createIcons();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartUI();
+        document.getElementById('pix-area').style.display = 'none';
+        document.getElementById('checkout-form').style.display = 'flex';
+        document.getElementById('btn-finalizar').style.display = 'block';
+    }
+
+    function calcularTotais() {
+        subtotalCart = cart.reduce((acc, i) => acc + i.price, 0);
+        document.getElementById('cart-total').innerText = `R$ ${subtotalCart.toFixed(2)}`;
+    }
+
+    async function gerarPix() {
+        hideError();
+
+        if(cart.length === 0) { 
+            showError("O carrinho está vazio. Equipe seus packs antes de avançar."); return; 
+        }
+        
+        const nome = document.getElementById('cliente-nome').value.trim();
+        const email = document.getElementById('cliente-email').value.trim();
+
+        if(!nome || !email) { 
+            showError("Preencha as credenciais do jogador (Nome e E-mail)."); return; 
+        }
+
+        const btn = document.getElementById('btn-finalizar');
+        btn.innerText = "GERANDO PAYLOAD PIX..."; btn.style.background = "transparent"; btn.style.color = "var(--brand)"; btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/pix-create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valor: subtotalCart, emailPayer: email, nomePayer: nome })
+            });
+
+            if(!response.ok) throw new Error("Erro no gateway");
+            const dados = await response.json();
+
+            document.getElementById('pix-qr').src = `data:image/jpeg;base64,${dados.qr_code_base64}`;
+            document.getElementById('pix-copia-cola').value = dados.qr_code_copia_cola;
+
+            btn.style.display = 'none'; 
+            document.getElementById('checkout-form').style.display = 'none';
+            document.getElementById('pix-area').style.display = 'block'; 
+
+            iniciarVerificacaoPagamento(dados.id);
+
+        } catch(e) {
+            console.error(e); 
+            showError("Falha ao comunicar com o gateway. Tente novamente.");
+            btn.innerText = "INICIAR CHECKOUT PIX"; btn.style.background = "var(--brand)"; btn.style.color = "#000"; btn.disabled = false;
+        }
+    }
+
+    function iniciarVerificacaoPagamento(paymentId) {
+        clearInterval(checkPaymentInterval);
+        
+        checkPaymentInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/pix-status?id=${paymentId}`);
+                const data = await res.json();
+
+                if (data.status === 'approved') {
+                    clearInterval(checkPaymentInterval);
+                    
+                    baixarArquivoTxt(data.email, data.senha);
+
+                    document.getElementById('pix-area').innerHTML = `
+                        <div style="text-align: center; color: #00e5ff; padding: 20px;">
+                            <i data-lucide="check-circle" size="64" style="margin-bottom: 15px;"></i>
+                            <h3 style="font-family: 'Syncopate'; margin-bottom: 10px;">PAGAMENTO APROVADO!</h3>
+                            <p style="color: white; font-size: 0.9rem;">Seu arquivo de acesso foi baixado automaticamente. Bem-vindo à GG Optimizer!</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                console.error("Erro ao verificar pagamento:", err);
+            }
+        }, 3000); 
+    }
+
+    function baixarArquivoTxt(email, senha) {
+        const conteudo = `=== ACESSO GG OPTIMIZER ===\r\n\r\nPagamento confirmado. Use os dados abaixo para logar em nossos sistemas.\r\n\r\nE-mail: ${email}\r\nSenha: ${senha}\r\n\r\nGuarde este arquivo em segurança e não compartilhe suas credenciais.`;
+        const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Acesso_GG_Optimizer.txt";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function copiarPix() {
+        const copyText = document.getElementById("pix-copia-cola");
+        copyText.select(); copyText.setSelectionRange(0, 99999); navigator.clipboard.writeText(copyText.value);
+        const btn = event.target; 
+        const originalText = btn.innerText;
+        btn.innerText = "CHAVE COPIADA!"; btn.style.background = "var(--brand)"; btn.style.color = "black";
+        setTimeout(() => { btn.innerText = originalText; btn.style.background = "transparent"; btn.style.color = "var(--brand)"; }, 2000);
+    }
+
+    window.onload = () => { lucide.createIcons(); renderProducts(); };
+    </script>
+</body>
+</html>
